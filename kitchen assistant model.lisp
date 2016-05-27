@@ -2,31 +2,25 @@
 
 ; ===================================================================
 
-; Halbrügge, M., Quade, M. & Engelbrecht, K.-P. (2015). A Predictive
-; Model of Human Error based on User Interface Development Models and
-; a Cognitive Architecture. In Taatgen, N. A., van Vugt, M. K., Borst,
-; J. P. & Mehlhorn, K. (Eds.), Proceedings of the 13th International
-; Conference on Cognitive Modeling (pp. 238-243). Groningen, the
-; Netherlands: University of Groningen.
+; Halbrügge, M., Quade, M. & Engelbrecht, K.-P. (2015). How can 
+; Cognitive Modeling Benefit from Ontologies? Evidence from the HCI 
+; Domain. In Bieger, J., Goertzel, B. & Potapov, A. (Eds.) Artificial
+; General Intelligence 2015, (pp. 261-271). Berlin: Springer. 
+; DOI: http://dx.doi.org/10.1007/978-3-319-21365-1_27
 
 ; -------------------------------------------------------------------
 
-; Abstract: The concept of device- vs. task-orientation allows to
-; identify subtasks that are especially prone to
-; errors. Device-oriented tasks occur whenever a user interface
-; requires additional steps that do not directly contribute to the
-; users' goals. They comprise, but are not limited to,
-; initialization errors and postcompletion errors (e.g., removing a
-; bank card after having received money). The vulnerability of
-; device-oriented tasks is often counteracted by making them
-; obligatory (e.g., by not handing out the money before the bank card
-; has been removed), making it even harder to predict where users will
-; have problems with a given interface without dedicated user
-; tests. In this paper we show how cognitive modeling can be used to
-; predict error rates of device-oriented and task-oriented subtasks
-; with respect to a given application logic. The process is
-; facilitated by exploiting user interface meta information from
-; model-based user interface development. 
+; Abstract: Cognitive modeling as a method has proven successful at 
+; reproducing and explaining human intelligent behavior in specific 
+; laboratory situations, but still struggles to produce more general 
+; intelligent capabilities. A promising strategy to address this 
+; weakness is the addition of large semantic resources to cognitive 
+; architectures. We are investigating the usefulness of this approach 
+; in the context of human behavior during software use. By adding world 
+; knowledge from a Wikipedia-based ontology to a model of human sequential 
+; behavior, we achieve quantitatively and qualitatively better fits 
+; to human data.The combination of model and ontology yields additional 
+; insights that cannot be explained by the model or the ontology alone.
 
 ; ===================================================================
 
@@ -57,15 +51,45 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 |#
 
-; ===================================================================
-
 (defun set-buffer-only (event)
   (eq (evt-action event) 'set-buffer-chunk))
 ; :trace-filter production-firing-only
 
+(defun on-chunk-add (chnk)
+  (let ((slotnames (chunk-type-slot-names-fct (chunk-chunk-type-fct chnk))))
+    (if (find 'INFO slotnames)
+        (let ((slot (chunk-slot-value-fct chnk 'INFO)))
+          (if slot
+              (let ((dm (get-module declarative)))
+                ;(if (gethash (hash-chunk-contents slot) (dm-chunk-hash-table dm))
+                (if (dm-fct (list slot))
+                  (progn
+                    ;(format t "CHUNK ADD ~W ~W ~W ~%" chnk slot (get-base-level-fct (list slot)))
+                    (set-base-levels-fct (list (list chnk (max 5 (exp (car (get-base-level-fct (list slot))))))))
+                    ;(sdp-fct (list slot :reference-count))
+                    ;(sdp-fct (list chnk :reference-count))
+                    )
+                  (progn
+                    (format t "NOT FOUND: ~W ~%" slot)
+                    ;(merge-chunk-into-dm (get-module declarative) nil slot t)
+                    ;(merge-dm-fct (list (list slot 'isa 'chunk)))
+                    (add-chunk-into-dm dm slot)
+                    (set-base-levels-fct (list (list slot 5)(list chnk 5)))
+                    )
+                  )
+                )
+              )
+          )
+        (set-base-levels-fct (list (list chnk 5))))
+    )
+  ;(format t "INFO-SLOT ~W~%" (chunk-slot-value-fct chnk 'INFO))
+  ;(sdp-fct (list chnk :reference-count))
+)
+
 (clear-all)
 
-(define-model pipe-dev-test
+
+(define-model masp-cooking
 
 ; :egs utility noise
 ; :iu initial utility (user defined productions)
@@ -94,10 +118,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
      :esc t
      :bll .1 :blc .75
      :er t :ans nil :nsji nil :act nil
+     :chunk-add-hook on-chunk-add
      :cursor-noise nil)
 
 ; allow parametrization before declarative mem is being filled
-; COMMENT OUT for running outside of ACT-CV
 (eval (read-from-string (EvalToString "(PARENT-SGP)")))
 
 (chunk-type recipe main prev info action order state worldmark)
@@ -128,6 +152,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  (STOPPING isa chunk)
  (RETRIEVE-ORDER isa chunk)
  (CHECK-WORLD-TRY isa chunk)
+ (CHECK-WORLD-IMAG isa chunk)
+ (SEARCH-WORLD-IMAG isa chunk)
 
  (s1 isa mealslot name s1)(s2 isa mealslot name s2)(s3 isa mealslot name s3)(s4 isa mealslot name s4)
 
@@ -194,17 +220,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
              (simset2ndorder (cdr l)))))
 (let ((nums '(one two three four five six seven eight nine ten eleven twelve thirteen fourteen))
       (orders '(nilone onetwo twothree threefour fourfive fivesix sixseven seveneight eightnine nineten teneleven eleventwelve twelvethirteen thirfourteen fourfivteen))
-      (entities '(push on off end-of-trial ask-experimenter s1 s2 s3 s4)))
+      ;(entities '(push on off end-of-trial ask-experimenter s1 s2 s3 s4))
+      )
   (progn
     (sdp-fct (list nums :reference-count 20000))
     (sdp-fct (list orders :reference-count 10000))
-    (sdp-fct (list entities :reference-count 20000))
+    ;(sdp-fct (list entities :reference-count 20000))
     ;(simset nums)
     ;(simset orders)
 ))
 
-; allow parametrization of chunks in declarative memory
-; COMMENT OUT for running outside of ACT-CV
 (eval (read-from-string (EvalToString "(PARENT-SDP)")))
 
 
@@ -733,6 +758,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
    +manual>
       isa move-cursor
       loc =pos
+
+   ;!output! (push =val)
 )
 
 (p click-text
@@ -804,10 +831,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =imaginal>
     isa meal
     - s1 =info
+    s1 =imag
 ==>
   =imaginal>
   =goal>
     state tstimag2
+  ;!output! (IMAG =imag)
 )
 (p test-imaginal-2-mismatch
   =goal>
@@ -817,10 +846,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =imaginal>
     isa meal
     - s2 =info
+    s2 =imag
 ==>
   =imaginal>
   =goal>
     state tstimag3
+  ;!output! (IMAG =imag)
 )
 (p test-imaginal-3-mismatch
   =goal>
@@ -830,10 +861,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =imaginal>
     isa meal
     - s3 =info
+    s3 =imag
 ==>
   =imaginal>
   =goal>
     state tstimag4
+  ;!output! (IMAG =imag)
 )
 (p test-imaginal-4-mismatch
   =goal>
@@ -843,10 +876,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =imaginal>
     isa meal
     - s4 =info
+    s4 =imag
 ==>
   =imaginal>
   =goal>
     state wait-click
+  ;!output! (IMAG =imag)
 )
 (p test-imaginal-1-match
   =goal>
@@ -2275,6 +2310,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =imaginal>
     isa recipe
     main =trialname
+    prev =prev
     info end-of-trial
     action ask-experimenter
 ==>
@@ -2291,6 +2327,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa recipe
     main =trialname
     state retrieve-next
+
+    ;!output! (end-of-trial prev =prev)
 )
 ; "meal" chunk is in imaginal buffer for spreading activation
 #|
@@ -2516,6 +2554,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 (p next-step-is-first
   =goal>
     isa recipe
+    ;main =rec
     state retrieve-next
 
   =retrieval>
@@ -2527,14 +2566,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     order =o
 ==>
   =goal>
-    ;isa recipe
     main =rec
     info =val
     action =a
     order =o
     state start
 
+  ;!output! (next trial =rec)
   !output! (next goal =val)
+  ;!output! (order =o)
   ;!eval! (dm)
 )
 
