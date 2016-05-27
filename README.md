@@ -1,4 +1,4 @@
-# actr-error-model
+# ACT-R Error Model
 
 The model uses the [ACT-R](http://act-r.psy.cmu.edu/) cognitive architecture.
 
