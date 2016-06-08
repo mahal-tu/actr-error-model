@@ -287,7 +287,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 #|
   ?vocal>
     state free
@@ -340,7 +340,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -431,7 +431,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -1081,7 +1081,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -1157,7 +1157,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p retrieve-check-world-start-2
   =goal>
@@ -1176,7 +1176,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 #|
@@ -1888,7 +1888,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 #|
   +vocal>
     isa speak
@@ -2534,7 +2534,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-main-mismatch-first
   =goal>
@@ -2678,7 +2678,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag2
   =goal>
@@ -2696,7 +2696,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag3
   =goal>
@@ -2714,7 +2714,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag4
   =goal>
@@ -2732,7 +2732,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
