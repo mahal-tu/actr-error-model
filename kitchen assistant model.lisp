@@ -2,25 +2,26 @@
 
 ; ===================================================================
 
-; Halbruegge, M., Quade, M. & Engelbrecht, K.-P. (2016). Cognitive 
-; Strategies in HCI and Their Implications on User Error. In Proc. 
-; CogSci 2016
+; Halbruegge, M. & Russwinkel, N. (2016). The Sum of Two Models: How 
+; a Composite Model Explains Unexpected User Behavior in a Dual-Task 
+; Scenario. In Proc. ICCM 2016
 
 ; -------------------------------------------------------------------
 
-; Abstract: Human error while performing well-learned tasks on a computer
-; is an infrequent, but pervasive problem. Such errors are
-; often attributed to memory deficits, such as loss of activation or
-; interference with other tasks (Altmann & Trafton, 2002). We
-; are arguing that this view neglects the role of the environment.
-; As embodied beings, humans make extensive use of external
-; cues during the planning and execution of tasks. In this paper,
-; we study how the visual interaction with a computer interface
-; is linked to user errors. Gaze recordings confirm our hypothesis
-; that the use of the environment increases when memory
-; becomes weak. An existing cognitive model of sequential action
-; and procedural error (Halbrügge, Quade, & Engelbrecht,
-; 2015) is extended to account for the observed gaze behavior.
+; Abstract: Maintaining cognitive control while pursuing several 
+; tasks at the same time is hard, especially when the current problem 
+; states of these tasks need to be represented in memory. We are 
+; investigating the mutual influence of a self-paced and a reactive 
+; task with regard to completion time and error rates. Against 
+; initial expectations, the interruptions from the reactive task did
+; not lead to more errors in the self-paced task, but only prolonged
+; the completion time. Our understanding of this result is guided by
+; a combined version of two previously published cognitive models of
+; the individual tasks. The combined model reproduces the empirical
+; findings concerning error rates and task completion times, but not
+; an unexpected change in the error pattern. These results feed back
+; into our theoretical understanding of cognitive control during 
+; sequential action.
 
 ; ===================================================================
 
@@ -79,7 +80,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ; :act activation trace
 
 ; :cursor-noise [nil] mouse cursor noise
-(sgp :v nil :trace-filter production-firing-only :trace-detail medium :show-focus t
+(sgp :v nil :trace-filter production-firing-only :trace-detail medium :show-focus nil
      :iu 0 :egs .5 :ul t
      :epl nil
      :imaginal-activation 1.0
@@ -99,9 +100,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 (chunk-type mealslot name)
 (chunk-type number)
 (chunk-type countorder n1 n2)
+(chunk-type listen)
+(chunk-type wmugoal state)
+(chunk-type wmutask count)
 
 (add-dm
  (init isa chunk)
+ (wmu isa chunk)
  (start isa chunk)
  (try-retrieve isa chunk)
  (retrieve-loc isa chunk)
@@ -122,9 +127,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  (STOPPING isa chunk)
  (RETRIEVE-ORDER isa chunk)
  (CHECK-WORLD-TRY isa chunk)
+ (CHECK-WORLD-IMAG isa chunk)
+ (SEARCH-WORLD-IMAG isa chunk)
+
+ (wmucnt isa wmutask count 0)
 
  (s1 isa mealslot name s1)(s2 isa mealslot name s2)(s3 isa mealslot name s3)(s4 isa mealslot name s4)
 
+ (zero isa number)
  (one isa number)
  (two isa number)
  (three isa number)
@@ -142,6 +152,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  (fifteen isa number)
 
  (nilone isa countorder n2 one)
+ (zeroone isa countorder n1 zero n2 one)
  (onetwo isa countorder n1 one n2 two)
  (twothree isa countorder n1 two n2 three)
  (threefour isa countorder n1 three n2 four)
@@ -201,6 +212,109 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ; COMMENT OUT for running outside of ACT-CV
 (eval (read-from-string (EvalToString "(PARENT-SDP)")))
 
+(p found-wmu
+  =goal>
+    isa wmugoal
+    state find
+  ?visual-location>
+    attended new
+  =visual-location>
+    isa visual-location
+    ;value wmu
+    > screen-x 1000
+    > screen-y 1000
+  ?retrieval>
+    state free
+    - state error
+    buffer empty
+  ?visual>
+    state free
+==>
+  +visual>
+    isa move-attention
+    screen-pos =visual-location
+
+  =goal>
+    state try-retrieve
+
+  +retrieval>
+    isa wmutask
+    :recently-retrieved nil
+)
+
+
+(p inc-wmu
+  =goal>
+    isa wmugoal
+    state try-retrieve
+  =visual>
+    isa text
+    value wmu
+  =retrieval>
+    isa wmutask
+    count =c0
+
+  !bind! =c1 (+ =c0 1)
+==>
+  =goal>
+    state find
+
+  -visual>
+
+  =retrieval>
+    count =c1
+  !output! (wmu =c1)
+
+  -retrieval>
+)
+
+
+(p abandon-wmu3
+  =goal>
+    isa wmugoal
+    state try-retrieve
+  =visual>
+    isa text
+    - value wmu
+  =retrieval>
+    isa wmutask
+==>
+  =goal>
+    state find
+
+  -retrieval>
+)
+
+
+(p abandon-wmu1
+  =goal>
+    isa wmugoal
+    state try-retrieve
+  ?visual>
+    state free
+    buffer empty
+  =retrieval>
+    isa wmutask
+==>
+  =goal>
+    state find
+
+  -retrieval>
+)
+
+(p abandon-wmu2
+  =goal>
+    isa wmugoal
+    state try-retrieve
+  ?retrieval>
+    state free
+    buffer empty
+==>
+  =goal>
+    state find
+)
+
+
 
 (p start-trial
   =goal>
@@ -216,6 +330,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state find ; find it without using decl mem
 
+  ;!eval! (print-visicon)
   ;!eval! (dm)
   ;!eval! (pprint-chunks-fct (list =imaginal))
 )
@@ -225,6 +340,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa recipe
     state find
     info =val
+  ?visual-location>
+    state free
 ==>
   +visual-location>
     isa visual-location
@@ -269,8 +386,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS1"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   -imaginal>
 )
 |#
@@ -287,7 +405,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 #|
   ?vocal>
     state free
@@ -296,8 +414,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS0"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 |#
@@ -313,6 +432,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     main =trialname
   ?visual-location>
     state error
+  ?retrieval>
+    state free
+    buffer empty
 ==>
   +retrieval>
     isa recipe
@@ -340,7 +462,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -400,8 +522,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS5"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -431,7 +554,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -459,8 +582,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS6"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 )
@@ -484,8 +608,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS7"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 )
@@ -527,8 +652,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "STOPPED"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -578,8 +704,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS4"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 )
@@ -599,8 +726,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS2"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 )
@@ -622,8 +750,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS3"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 )
@@ -660,7 +789,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
       isa text
       value =val
       - color black-white
-
+  ?retrieval>
+    state free
+    buffer empty
 ==>
    +retrieval>
       isa countorder
@@ -702,7 +833,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
       isa text
       value =val
       color black-white
-
+  ?retrieval>
+    state free
+    buffer empty
 ==>
    +retrieval>
       isa countorder
@@ -911,6 +1044,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   ?manual>
     state free
+  ?retrieval>
+    state free
+    buffer empty
 ==>
   +retrieval>
     isa countorder
@@ -920,6 +1056,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state retrieve-order
 )
+
 #|
 ; don't use the order -> will create errors
 (p after-click-mouse-2
@@ -1059,8 +1196,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "REPEAT"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -1081,7 +1219,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -1157,7 +1295,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p retrieve-check-world-start-2
   =goal>
@@ -1176,7 +1314,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 #|
@@ -1191,6 +1329,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     :attended nil
     :nearest current
     - value =curstep
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1200,6 +1339,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     isa recipe
     state check-world-start
+  ?retrieval>
+    state free
+    buffer empty
 ==>
   +retrieval>
     isa mealslot
@@ -1234,6 +1376,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =imaginal>
     isa meal
     =slot =val
+  ?visual-location>
+    state free
 ==>
   +visual-location>
     isa visual-location
@@ -1297,12 +1441,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     info =curstep
   ?retrieval>
     state error
+  ?visual-location>
+    state free
 ==>
   +visual-location>
     isa visual-location
     :attended nil
     :nearest current
     - value =curstep
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1314,11 +1461,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     info nil
   ?retrieval>
     state error
+  ?visual-location>
+    state free
 ==>
   +visual-location>
     isa visual-location
     :attended nil
     :nearest current
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1611,8 +1761,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "DONE??"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -1634,8 +1785,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "DONE???"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -1657,8 +1809,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "DONE????"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -1685,6 +1838,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     :nearest clockwise
     - value =lastval
     - value =lastworldval
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1707,6 +1861,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     :attended nil
     :nearest clockwise
     - value =lastworldval
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1727,6 +1882,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     :attended nil
     :nearest clockwise
     - value =lastval
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1764,12 +1920,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa recipe
     main =rec
     info =val
+  ?visual-location>
+    state free
 ==>
   +visual-location>
     isa visual-location
     :attended nil
     :nearest clockwise
     - value =val
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1785,12 +1944,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa recipe
     main =rec
     info =val
+  ?visual-location>
+    state free
 ==>
   +visual-location>
     isa visual-location
     :attended nil
     :nearest counterclockwise
     - value =val
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1812,6 +1974,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =temporal>
     isa time
     ticks =tickthres
+  ?visual-location>
+    state free
 ==>
   +temporal>
     isa clear
@@ -1822,6 +1986,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     :nearest clockwise
     - value =lastval
     - value =val
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1840,6 +2005,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa recipe
     - main =rec
     info =val
+  ?visual-location>
+    state free
 ==>
   +visual-location>
     isa visual-location
@@ -1847,6 +2014,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     :nearest clockwise
     - value =lastval
     - value =val
+    - value wmu
 
   =goal>
     state check-world-search
@@ -1888,22 +2056,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 #|
   +vocal>
     isa speak
     string "DONE?"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 |#
 )
 
 (p after-click-mouse-stop
-  ?goal>
-    buffer empty
+  =goal>
+   isa listen
   =aural>
     isa sound
     kind word
@@ -1917,9 +2086,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 ; rely on buffer stuffing
 (p attend-any-aural-start
-  ?goal>
-    buffer empty
-
+  =goal>
+   isa listen
   =aural-location>
     isa audio-event
 
@@ -1955,7 +2123,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   ;!eval! (print-audicon)
 )
 
+; HACK: Use to reset the wmu task between trials
 (p eat-aural-self
+  =goal>
+    isa wmugoal
+
   =aural-location>
     isa audio-event
     location self
@@ -1967,15 +2139,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   -aural>
   -aural-location>
 
+  ; abandon any previous retrieval
+  +retrieval>
+    isa number
+
+  =goal>
+    state find
+
   ;!eval! (print-audicon)
 )
 
 
 (p hear-new-task-1b
-  ?goal>
-    buffer empty
-    state free
-
+  =goal>
+   isa listen
   =aural-location>
     isa audio-event
     - location self
@@ -1987,12 +2164,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   =imaginal>
     isa meal
+  ?retrieval>
+    state free
 ==>
   =imaginal> init
   +imaginal>
     isa recipe
     main =trialname
 
+  -goal>
   +goal>
     isa meal
     main =trialname ; activation spreading from the trial name?!
@@ -2006,10 +2186,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   !output! (next task =trialname)
 )
 (p hear-new-task-1
-  ?goal>
-    buffer empty
-    state free
-
+  =goal>
+   isa listen
   =aural-location>
     isa audio-event
     - location self
@@ -2021,6 +2199,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   ?imaginal>
     buffer empty
+    state free
+  ?retrieval>
     state free
 ==>
   +imaginal>
@@ -2323,6 +2503,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     main =trialname
     info end-of-trial
     action ask-experimenter
+  ?retrieval>
+    state free
 ==>
   +imaginal> =goal
 
@@ -2332,7 +2514,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     main =trialname
     order one
 
-  =goal> init
+  ;=goal> init
+  -goal>
   +goal>
     isa recipe
     main =trialname
@@ -2525,8 +2708,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "OOPS8"
 
-  =goal> init
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 |#
@@ -2534,7 +2718,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-main-mismatch-first
   =goal>
@@ -2553,8 +2737,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "REPEAT"
 
-  =goal> init ; overwrite to avoid strengthening
+  ;=goal> init
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -2618,6 +2803,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state nil
     worldmark nil
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -2655,6 +2841,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state nil
     worldmark nil
   -goal>
+  +goal> isa listen
   =imaginal> init
   -imaginal>
 
@@ -2678,7 +2865,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag2
   =goal>
@@ -2696,7 +2883,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag3
   =goal>
@@ -2714,7 +2901,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag4
   =goal>
@@ -2732,7 +2919,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
-  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
+  ;!eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -2747,8 +2934,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     isa speak
     string "READY"
 
-  =goal> init ; overwrite to avoid strengthening
   -goal>
+  +goal>
+    isa listen
+  +goal>
+    isa wmugoal
+    state find
 )
 
 (goal-focus goal)
