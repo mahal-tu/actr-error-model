@@ -2,31 +2,25 @@
 
 ; ===================================================================
 
-; Halbrügge, M., Quade, M. & Engelbrecht, K.-P. (2015). A Predictive
-; Model of Human Error based on User Interface Development Models and
-; a Cognitive Architecture. In Taatgen, N. A., van Vugt, M. K., Borst,
-; J. P. & Mehlhorn, K. (Eds.), Proceedings of the 13th International
-; Conference on Cognitive Modeling (pp. 238-243). Groningen, the
-; Netherlands: University of Groningen.
+; Halbruegge, M., Quade, M. & Engelbrecht, K.-P. (2016). Cognitive 
+; Strategies in HCI and Their Implications on User Error. In Proc. 
+; CogSci 2016
 
 ; -------------------------------------------------------------------
 
-; Abstract: The concept of device- vs. task-orientation allows to
-; identify subtasks that are especially prone to
-; errors. Device-oriented tasks occur whenever a user interface
-; requires additional steps that do not directly contribute to the
-; users' goals. They comprise, but are not limited to,
-; initialization errors and postcompletion errors (e.g., removing a
-; bank card after having received money). The vulnerability of
-; device-oriented tasks is often counteracted by making them
-; obligatory (e.g., by not handing out the money before the bank card
-; has been removed), making it even harder to predict where users will
-; have problems with a given interface without dedicated user
-; tests. In this paper we show how cognitive modeling can be used to
-; predict error rates of device-oriented and task-oriented subtasks
-; with respect to a given application logic. The process is
-; facilitated by exploiting user interface meta information from
-; model-based user interface development. 
+; Abstract: Human error while performing well-learned tasks on a computer
+; is an infrequent, but pervasive problem. Such errors are
+; often attributed to memory deficits, such as loss of activation or
+; interference with other tasks (Altmann & Trafton, 2002). We
+; are arguing that this view neglects the role of the environment.
+; As embodied beings, humans make extensive use of external
+; cues during the planning and execution of tasks. In this paper,
+; we study how the visual interaction with a computer interface
+; is linked to user errors. Gaze recordings confirm our hypothesis
+; that the use of the environment increases when memory
+; becomes weak. An existing cognitive model of sequential action
+; and procedural error (Halbrügge, Quade, & Engelbrecht,
+; 2015) is extended to account for the observed gaze behavior.
 
 ; ===================================================================
 
@@ -40,7 +34,7 @@
 
 ; ===================================================================
 
-; Copyright (c) 2015 Marc Halbruegge (marc.halbruegge@tu-berlin.de)
+; Copyright (c) 2016 Marc Halbruegge (marc.halbruegge@tu-berlin.de)
 
 #|
 This library is free software; you can redistribute it and/or
@@ -57,13 +51,14 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 |#
 
-; ===================================================================
-
 (defun set-buffer-only (event)
   (eq (evt-action event) 'set-buffer-chunk))
 ; :trace-filter production-firing-only
 
 (clear-all)
+
+(defvar *give-up-ticks*)
+(setf *give-up-ticks* 15)
 
 (define-model pipe-dev-test
 
@@ -84,7 +79,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ; :act activation trace
 
 ; :cursor-noise [nil] mouse cursor noise
-(sgp :v nil :trace-filter production-firing-only :trace-detail medium :show-focus nil
+(sgp :v nil :trace-filter production-firing-only :trace-detail medium :show-focus t
      :iu 0 :egs .5 :ul t
      :epl nil
      :imaginal-activation 1.0
@@ -97,7 +92,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
      :cursor-noise nil)
 
 ; allow parametrization before declarative mem is being filled
-; COMMENT OUT for running outside of ACT-CV
 (eval (read-from-string (EvalToString "(PARENT-SGP)")))
 
 (chunk-type recipe main prev info action order state worldmark)
@@ -293,6 +287,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-start
     worldmark nil
 
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 #|
   ?vocal>
     state free
@@ -344,6 +339,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -433,6 +430,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -1081,6 +1080,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
@@ -1155,6 +1156,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p retrieve-check-world-start-2
   =goal>
@@ -1172,6 +1175,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 #|
@@ -1490,6 +1495,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   ?visual>
     state free
 ==>
+  +temporal>
+    isa time
+
   +retrieval>
     isa recipe
     main =rec
@@ -1550,6 +1558,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   ?visual>
     state free
 ==>
+  +temporal>
+    isa time
+
   +retrieval>
     isa recipe
     info =val
@@ -1785,6 +1796,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     state check-world-search
 )
 
+(p retrieve-check-world-giveup
+  ; not optimal, but should work
+  !bind! =tickthres *give-up-ticks*
+  =goal>
+    isa recipe
+    state check-world-try
+    main =rec
+    info =lastval
+
+  =visual-location>
+    isa visual-location
+    value =val
+
+  =temporal>
+    isa time
+    ticks =tickthres
+==>
+  +temporal>
+    isa clear
+
+  +visual-location>
+    isa visual-location
+    :attended nil
+    :nearest clockwise
+    - value =lastval
+    - value =val
+
+  =goal>
+    state check-world-search
+
+  !output! (world giveup =val after =tickthres ticks)
+)
+
 (p retrieve-check-world-mismatch
   =goal>
     isa recipe
@@ -1843,6 +1887,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 #|
   +vocal>
     isa speak
@@ -2487,6 +2533,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-main-mismatch-first
   =goal>
@@ -2629,6 +2677,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag2
   =goal>
@@ -2646,6 +2696,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag3
   =goal>
@@ -2663,6 +2714,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 (p next-step-is-finish-imag4
   =goal>
@@ -2680,6 +2732,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   =goal>
     state check-world-start
     worldmark nil
+  !eval! (EvalToVoid (format nil "(START-WORLD-STRATEGY ~W)" (mp-time)))
 )
 
 
